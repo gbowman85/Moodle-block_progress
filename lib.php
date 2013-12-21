@@ -102,6 +102,14 @@ function block_progress_monitorable_modules() {
                                       AND i.id = g.itemid
                                       AND g.userid = :userid
                                       AND (g.finalgrade IS NOT NULL OR g.excluded <> 0)",
+                'submitted_marked'    => "SELECT s.id
+                                     FROM {assign_submission} s, {assign_grades} g
+                                    WHERE s.assignment = :eventid
+                                      AND g.assignment = s.assignment
+                                      AND s.userid = :userid
+                                      AND g.userid = s.userid
+                                      AND g.attemptnumber = s.attemptnumber
+                                      AND s.status = 'submitted'",
                 'passed'       => "SELECT g.finalgrade, i.gradepass
                                      FROM {grade_grades} g, {grade_items} i
                                     WHERE i.itemmodule = 'assign'
@@ -118,7 +126,7 @@ function block_progress_monitorable_modules() {
                                       AND (g.finalgrade IS NOT NULL OR g.excluded <> 0)
                                       AND g.finalgrade >= i.gradepass",
             ),
-            'defaultAction' => 'submitted'
+            'defaultAction' => 'submitted_marked'
         ),
         'assignment' => array(
             'defaultTime' => 'timedue',
@@ -1015,6 +1023,40 @@ function block_progress_attempts($modules, $config, $events, $userid, $course) {
 }
 
 /**
+ * Check if a user's assignment has been marked
+ *
+ * @param array    $modules The modules used in the course
+ * @param stdClass $config  The blocks configuration settings
+ * @param array    $events  The possible events that can occur for modules
+ * @param int      $userid  The user's id
+ * @return array   an describing the user's attempts based on module+instance identifiers
+ */
+function block_progress_markedassignments($modules, $config, $events, $userid, $instance) {
+    global $COURSE, $DB;
+    $markedassignments = array();
+
+    foreach ($events as $event) {
+        $module = $modules[$event['type']];
+        $uniqueid = $event['type'].$event['id'];
+
+        //If assign, check if marked
+        if ($event['type'] == 'assign') {
+            $query =  $module['actions']['submitted_marked'];
+            $parameters = array('courseid' => $COURSE->id, 'courseid1' => $COURSE->id,
+                                'userid' => $userid, 'userid1' => $userid,
+                                'eventid' => $event['id'], 'eventid1' => $event['id'],
+                                'cmid' => $event['cmid'], 'cmid1' => $event['cmid'],
+                          );
+            $markedassignments[$uniqueid] = $DB->record_exists_sql($query, $parameters)?true:false;
+        } else {
+            $markedassignments[$uniqueid] = false;
+        }
+
+    }
+    return $markedassignments;
+}
+
+/**
  * Draws a progress bar
  *
  * @param array    $modules  The modules used in the course
@@ -1023,10 +1065,11 @@ function block_progress_attempts($modules, $config, $events, $userid, $course) {
  * @param int      $userid   The user's id
  * @param int      instance  The block instance (in case more than one is being displayed)
  * @param array    $attempts The user's attempts on course activities
+ * @param array    $markedassignments The user's marked assignments
  * @param bool     $simple   Controls whether instructions are shown below a progress bar
  * @return string  Progress Bar HTML content
  */
-function block_progress_bar($modules, $config, $events, $userid, $instance, $attempts, $course, $simple = false) {
+function block_progress_bar($modules, $config, $events, $userid, $instance, $attempts, $markedassignments, $course, $simple = false) {
     global $OUTPUT, $CFG;
     $now = time();
     $numevents = count($events);
@@ -1099,6 +1142,7 @@ function block_progress_bar($modules, $config, $events, $userid, $instance, $att
     $counter = 1;
     foreach ($events as $event) {
         $attempted = $attempts[$event['type'].$event['id']];
+        $marked = $markedassignments[$event['type'].$event['id']];
         $action = isset($config->{'action_'.$event['type'].$event['id']})?
                   $config->{'action_'.$event['type'].$event['id']}:
                   $modules[$event['type']]['defaultAction'];
@@ -1110,12 +1154,32 @@ function block_progress_bar($modules, $config, $events, $userid, $instance, $att
             'width' => $width.'%',
             'onmouseover' => 'M.block_progress.showInfo('.$instance.','.$userid.','.$event['cm']->id.');',
              'style' => 'background-color:');
-        if ($attempted === true) {
-            $celloptions['style'] .= $colours['attempted_colour'].';';
-            $cellcontent = $OUTPUT->pix_icon(
-                               isset($config->progressBarIcons) && $config->progressBarIcons == 1 ?
-                               'tick' : 'blank', '', 'block_progress');
+        //If 'assign' then show orange if submitted and green if also marked
+        if (get_string($config->{'action_'.$event['type'].$event['id']}, 'block_progress') == 'submitted or marked' && $attempted == true) {
+            //If the assignment has been marked show green
+            if ($marked === true) {
+                $celloptions['style'] .= $colours['marked_colour'].';';
+                $cellcontent = $OUTPUT->pix_icon(
+                                   isset($config->progressBarIcons) && $config->progressBarIcons==1 ?
+                                   'tick' : 'blank', '', 'block_progress');
+            }
+            //If the assignment has been attempted but not yet marked show orange
+            else if ($attempted === true) {
+                $celloptions['style'] .= $colours['attempted_colour'].';';
+                $cellcontent = $OUTPUT->pix_icon(
+                                   isset($config->progressBarIcons) && $config->progressBarIcons==1 ?
+                                   'tick' : 'blank', '', 'block_progress');
+            }
         }
+        //Not assign module
+        else if ($attempted) {
+                $celloptions['style'] .= get_string('attempted_colour', 'block_progress').';';
+                $cellcontent = $OUTPUT->pix_icon(
+                                   isset($config->progressBarIcons) && $config->progressBarIcons==1 ?
+                                   'tick' : 'blank', '', 'block_progress');
+            }
+
+        //Otherwise act as normal
         else if (((!isset($config->orderby) || $config->orderby == 'orderbytime') && $event['expected'] < $now) ||
                  ($attempted === 'failed')) {
             $celloptions['style'] .= $colours['notattempted_colour'].';';

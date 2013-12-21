@@ -74,9 +74,10 @@ $string['passedscorm'] = 'passed';
 $string['posted_to'] = 'posted to';
 $string['responded_to'] = 'responded to';
 $string['submitted'] = 'submitted';
+$string['submitted_marked'] = 'submitted or marked';
 $string['viewed'] = 'viewed';
 
-// Stings for the Config page.
+// Strings for the Config page.
 $string['config_default_title'] = 'Progress Bar';
 $string['config_group'] = 'Visible only to group';
 $string['config_header_action'] = 'Action';
@@ -176,6 +177,8 @@ $string['time_expected'] = 'Expected';
 // Default colours that may have different cultural meanings.
 // Note that these defaults can be overridden by the block's global settings.
 $string['attempted_colour'] = '#5CD85C';
+$string['marked_colour'] = '#5CD85C';
+$string['submitted_colour'] = '#F7BB5C';
 $string['notAttempted_colour'] = '#FF5C5C';
 $string['futureNotAttempted_colour'] = '#5C5CFF';
 $string['attempted_colour_title'] = 'Attempted Colour';

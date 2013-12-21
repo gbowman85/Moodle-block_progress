@@ -183,12 +183,18 @@ class block_progress extends block_base {
                                                             $blockinstance->events,
                                                             $USER->id,
                                                             $course->id);
-                        $this->content->text .= block_progress_bar($modules,
+                        $markedassignments = block_progress_markedassignments($modules,
+                                                            $blockinstance->config,
+                                                            $blockinstance->events,
+                                                            $USER->id,
+                                                            $course->id);
+			$this->content->text .= block_progress_bar($modules,
                                                                    $blockinstance->config,
                                                                    $blockinstance->events,
                                                                    $USER->id,
                                                                    $blockinstance->id,
                                                                    $attempts,
+                                                                   $markedassignments,
                                                                    $course->id);
                     }
                 }
@@ -251,12 +257,14 @@ class block_progress extends block_base {
 
             // Display progress bar.
             $attempts = block_progress_attempts($modules, $this->config, $events, $USER->id, $COURSE->id);
+            $markedassignments = block_progress_markedassignments($modules, $this->config, $events, $USER->id,$COURSE->id);
             $this->content->text = block_progress_bar($modules,
                                                       $this->config,
                                                       $events,
                                                       $USER->id,
                                                       $this->instance->id,
                                                       $attempts,
+                                                      $markedassignments,
                                                       $COURSE->id);
             $blockinstancesonpage = array($this->instance->id);
 
