@@ -1006,6 +1006,9 @@ function block_progress_attempts($modules, $config, $events, $userid, $course) {
                 $action = isset($config->{'action_'.$uniqueid})?
                           $config->{'action_'.$uniqueid}:
                           $module['defaultAction'];
+                if ($action == 'submitted_marked') {
+                  $action = 'submitted';
+                }
                 $query = $module['actions'][$action];
             }
 
