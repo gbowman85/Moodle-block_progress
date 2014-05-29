@@ -1176,7 +1176,7 @@ function block_progress_bar($modules, $config, $events, $userid, $instance, $att
         }
         //Not assign module
         else if ($attempted) {
-                $celloptions['style'] .= get_string('attempted_colour', 'block_progress').';';
+                $celloptions['style'] .= get_config('block_progress', 'attempted_colour').';';
                 $cellcontent = $OUTPUT->pix_icon(
                                    isset($config->progressBarIcons) && $config->progressBarIcons==1 ?
                                    'tick' : 'blank', '', 'block_progress');
