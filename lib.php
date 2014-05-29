@@ -1048,7 +1048,7 @@ function block_progress_markedassignments($modules, $config, $events, $userid, $
             $parameters = array('courseid' => $COURSE->id, 'courseid1' => $COURSE->id,
                                 'userid' => $userid, 'userid1' => $userid,
                                 'eventid' => $event['id'], 'eventid1' => $event['id'],
-                                'cmid' => $event['cmid'], 'cmid1' => $event['cmid'],
+                                'cmid' => $event['cm']->id, 'cmid1' => $event['cm']->id,
                           );
             $markedassignments[$uniqueid] = $DB->record_exists_sql($query, $parameters)?true:false;
         } else {
