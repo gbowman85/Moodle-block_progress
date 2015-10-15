@@ -1092,7 +1092,9 @@ function block_progress_bar($modules, $config, $events, $userid, $instance, $att
     // Get colours and use defaults if they are not set in global settings.
     $colournames = array(
         'attempted_colour' => 'attempted_colour',
-        'notattempted_colour' => 'notAttempted_colour',
+        'attempted_colour' => 'marked_colour',
+        'attempted_colour' => 'submitted_colour',
+	'notattempted_colour' => 'notAttempted_colour',
         'futurenotattempted_colour' => 'futureNotAttempted_colour'
     );
     $colours = array();
